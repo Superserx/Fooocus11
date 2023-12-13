@@ -1,3 +1,4 @@
+// based on https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.6.0/javascript/contextMenus.js
 
 var contextMenuInit = function() {
     let eventListenerApplied = false;
@@ -16,7 +17,7 @@ var contextMenuInit = function() {
             oldMenu.remove();
         }
 
-        let baseStyle = window.getComputedStyle(uiCurrentTab);
+        let baseStyle = window.getComputedStyle(gradioApp().querySelector('button.selected'));
 
         const contextMenu = document.createElement('nav');
         contextMenu.id = "context-menu";
@@ -25,8 +26,6 @@ var contextMenuInit = function() {
         contextMenu.style.fontFamily = baseStyle.fontFamily;
         contextMenu.style.top = posy + 'px';
         contextMenu.style.left = posx + 'px';
-
-
 
         const contextMenuList = document.createElement('ul');
         contextMenuList.className = 'context-menu-items';
@@ -131,6 +130,10 @@ var appendContextMenuOption = initResponse[0];
 var removeContextMenuOption = initResponse[1];
 var addContextMenuEventListener = initResponse[2];
 
+let cancelGenerateForever = function() {
+    clearInterval(window.generateOnRepeatInterval);
+};
+
 (function() {
     //Start example Context Menu Items
     let generateOnRepeat = function(genbuttonid, interruptbuttonid) {
@@ -148,29 +151,20 @@ var addContextMenuEventListener = initResponse[2];
         500);
     };
 
-    let generateOnRepeat_txt2img = function() {
-        generateOnRepeat('#txt2img_generate', '#txt2img_interrupt');
+    let generateOnRepeatForButtons = function() {
+        generateOnRepeat('#generate_button', '#stop_button');
     };
 
-    let generateOnRepeat_img2img = function() {
-        generateOnRepeat('#img2img_generate', '#img2img_interrupt');
-    };
+    appendContextMenuOption('#generate_button', 'Generate forever', generateOnRepeatForButtons);
+//    appendContextMenuOption('#stop_button', 'Generate forever', generateOnRepeatForButtons);
 
-    appendContextMenuOption('#txt2img_generate', 'Generate forever', generateOnRepeat_txt2img);
-    appendContextMenuOption('#txt2img_interrupt', 'Generate forever', generateOnRepeat_txt2img);
-    appendContextMenuOption('#img2img_generate', 'Generate forever', generateOnRepeat_img2img);
-    appendContextMenuOption('#img2img_interrupt', 'Generate forever', generateOnRepeat_img2img);
-
-    let cancelGenerateForever = function() {
-        clearInterval(window.generateOnRepeatInterval);
-    };
-
-    appendContextMenuOption('#txt2img_interrupt', 'Cancel generate forever', cancelGenerateForever);
-    appendContextMenuOption('#txt2img_generate', 'Cancel generate forever', cancelGenerateForever);
-    appendContextMenuOption('#img2img_interrupt', 'Cancel generate forever', cancelGenerateForever);
-    appendContextMenuOption('#img2img_generate', 'Cancel generate forever', cancelGenerateForever);
-
+//    appendContextMenuOption('#stop_button', 'Cancel generate forever', cancelGenerateForever);
+//    appendContextMenuOption('#generate_button', 'Cancel generate forever', cancelGenerateForever);
 })();
 //End example Context Menu Items
 
-onAfterUiUpdate(addContextMenuEventListener);
+document.onreadystatechange = function () {
+    if (document.readyState == "complete") {
+        addContextMenuEventListener();
+    }
+};

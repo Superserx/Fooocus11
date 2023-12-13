@@ -1,6 +1,12 @@
+function updateInput(target) {
+    let e = new Event("input", {bubbles: true});
+    Object.defineProperty(e, "target", {value: target});
+    target.dispatchEvent(e);
+}
+
 function keyupEditAttention(event) {
     let target = event.originalTarget || event.composedPath()[0];
-    if (!target.matches("*:is([id*='_toprow'] [id*='_prompt'], .prompt) textarea")) return;
+    if (!target.matches("*:is([id*='_prompt'], .prompt) textarea")) return;
     if (!(event.metaKey || event.ctrlKey)) return;
 
     let isPlus = event.key == "ArrowUp";
@@ -46,7 +52,7 @@ function keyupEditAttention(event) {
 
     function selectCurrentWord() {
         if (selectionStart !== selectionEnd) return false;
-        const delimiters = opts.keyedit_delimiters + " \r\n\t";
+        const delimiters = ".,\\/!?%^*;:{}=`~() \r\n\t";
 
         // seek backward until to find beggining
         while (!delimiters.includes(text[selectionStart - 1]) && selectionStart > 0) {
@@ -70,11 +76,11 @@ function keyupEditAttention(event) {
     event.preventDefault();
 
     var closeCharacter = ')';
-    var delta = opts.keyedit_precision_attention;
+    var delta = 0.1;
 
     if (selectionStart > 0 && text[selectionStart - 1] == '<') {
         closeCharacter = '>';
-        delta = opts.keyedit_precision_extra;
+        delta = 0.05;
     } else if (selectionStart == 0 || text[selectionStart - 1] != "(") {
 
         // do not include spaces at the end
@@ -114,6 +120,7 @@ function keyupEditAttention(event) {
     target.selectionEnd = selectionEnd;
 
     updateInput(target);
+
 }
 
 addEventListener('keydown', (event) => {
