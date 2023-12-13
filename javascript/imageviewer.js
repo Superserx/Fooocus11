@@ -1,5 +1,4 @@
-// From A1111
-
+// A full size 'lightbox' preview modal shown when left clicking on gallery previews
 function closeModal() {
     gradioApp().getElementById("lightboxModal").style.display = "none";
 }
@@ -15,6 +14,14 @@ function showModal(event) {
     lb.style.display = "flex";
     lb.focus();
 
+    const tabTxt2Img = gradioApp().getElementById("tab_txt2img");
+    const tabImg2Img = gradioApp().getElementById("tab_img2img");
+    // show the save button in modal only on txt2img or img2img tabs
+    if (tabTxt2Img.style.display != "none" || tabImg2Img.style.display != "none") {
+        gradioApp().getElementById("modal_save").style.display = "inline";
+    } else {
+        gradioApp().getElementById("modal_save").style.display = "none";
+    }
     event.stopPropagation();
 }
 
@@ -35,25 +42,6 @@ function updateOnBackgroundChange() {
             }
         }
     }
-}
-
-function all_gallery_buttons() {
-    var allGalleryButtons = gradioApp().querySelectorAll('.image_gallery .thumbnails > .thumbnail-item.thumbnail-small');
-    var visibleGalleryButtons = [];
-    allGalleryButtons.forEach(function(elem) {
-        if (elem.parentElement.offsetParent) {
-            visibleGalleryButtons.push(elem);
-        }
-    });
-    return visibleGalleryButtons;
-}
-
-function selected_gallery_button() {
-    return all_gallery_buttons().find(elem => elem.classList.contains('selected')) ?? null;
-}
-
-function selected_gallery_index() {
-    return all_gallery_buttons().findIndex(elem => elem.classList.contains('selected'));
 }
 
 function modalImageSwitch(offset) {
@@ -86,10 +74,21 @@ function modalImageSwitch(offset) {
 }
 
 function saveImage() {
-
+    const tabTxt2Img = gradioApp().getElementById("tab_txt2img");
+    const tabImg2Img = gradioApp().getElementById("tab_img2img");
+    const saveTxt2Img = "save_txt2img";
+    const saveImg2Img = "save_img2img";
+    if (tabTxt2Img.style.display != "none") {
+        gradioApp().getElementById(saveTxt2Img).click();
+    } else if (tabImg2Img.style.display != "none") {
+        gradioApp().getElementById(saveImg2Img).click();
+    } else {
+        console.error("missing implementation for saving modal of this type");
+    }
 }
 
 function modalSaveImage(event) {
+    saveImage();
     event.stopPropagation();
 }
 
@@ -142,9 +141,9 @@ function setupImageForLightbox(e) {
             evt.preventDefault();
             return;
         }
-        if (evt.button != 0) return;
+        if (!opts.js_modal_lightbox || evt.button != 0) return;
 
-        modalZoomSet(gradioApp().getElementById('modalImage'), true);
+        modalZoomSet(gradioApp().getElementById('modalImage'), opts.js_modal_lightbox_initially_zoomed);
         evt.preventDefault();
         showModal(evt);
     }, true);
@@ -177,7 +176,7 @@ function modalTileImageToggle(event) {
 }
 
 onAfterUiUpdate(function() {
-    var fullImg_preview = gradioApp().querySelectorAll('.image_gallery > div > img');
+    var fullImg_preview = gradioApp().querySelectorAll('.gradio-gallery > div > img');
     if (fullImg_preview != null) {
         fullImg_preview.forEach(setupImageForLightbox);
     }
@@ -203,20 +202,20 @@ document.addEventListener("DOMContentLoaded", function() {
     modalZoom.title = "Toggle zoomed view";
     modalControls.appendChild(modalZoom);
 
-    // const modalTileImage = document.createElement('span');
-    // modalTileImage.className = 'modalTileImage cursor';
-    // modalTileImage.innerHTML = '&#8862;';
-    // modalTileImage.addEventListener('click', modalTileImageToggle, true);
-    // modalTileImage.title = "Preview tiling";
-    // modalControls.appendChild(modalTileImage);
-    //
-    // const modalSave = document.createElement("span");
-    // modalSave.className = "modalSave cursor";
-    // modalSave.id = "modal_save";
-    // modalSave.innerHTML = "&#x1F5AB;";
-    // modalSave.addEventListener("click", modalSaveImage, true);
-    // modalSave.title = "Save Image(s)";
-    // modalControls.appendChild(modalSave);
+    const modalTileImage = document.createElement('span');
+    modalTileImage.className = 'modalTileImage cursor';
+    modalTileImage.innerHTML = '&#8862;';
+    modalTileImage.addEventListener('click', modalTileImageToggle, true);
+    modalTileImage.title = "Preview tiling";
+    modalControls.appendChild(modalTileImage);
+
+    const modalSave = document.createElement("span");
+    modalSave.className = "modalSave cursor";
+    modalSave.id = "modal_save";
+    modalSave.innerHTML = "&#x1F5AB;";
+    modalSave.addEventListener("click", modalSaveImage, true);
+    modalSave.title = "Save Image(s)";
+    modalControls.appendChild(modalSave);
 
     const modalClose = document.createElement('span');
     modalClose.className = 'modalClose cursor';
